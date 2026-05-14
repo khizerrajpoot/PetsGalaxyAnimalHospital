@@ -1,10 +1,11 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { HeartPulse, MapPin, Phone, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { HeartPulse, MapPin, Menu, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
@@ -13,6 +14,7 @@ const nav = [
   { id: "home", label: "Home" },
   { id: "about", label: "About" },
   { id: "services", label: "Services" },
+  { id: "pet-medications", label: "Medications" },
   { id: "location", label: "Location" },
   { id: "contact", label: "Contact" },
   { id: "reviews", label: "Reviews" },
@@ -20,28 +22,51 @@ const nav = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const emergencyTel = `tel:${siteConfig.phones.emergency.replaceAll(" ", "")}`;
+  const [menuOpen, setMenuOpen] = React.useState(false);
 
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  React.useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
+  function navHref(id: string) {
+    return id === "home" ? "/#home" : `/#${id}`;
+  }
+
   return (
     <header className="sticky top-0 z-50">
-      <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-4 2xl:max-w-[90rem]">
+      <div className="mx-auto max-w-6xl px-4 pt-4">
         <div className="rounded-2xl bg-white/70 backdrop-blur-xl ring-1 ring-slate-200/70 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.45)]">
-          <div className="flex items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-5">
+          <div className="flex min-w-0 items-center justify-between gap-2 px-4 py-3 sm:px-5">
             <Link
               href="/#home"
-              className="group flex shrink-0 items-center gap-2.5 sm:gap-3.5"
+              className="group flex min-w-0 flex-1 items-center gap-2 sm:gap-3 xl:flex-initial xl:shrink-0"
+              onClick={() => setMenuOpen(false)}
             >
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70 shadow-[0_14px_40px_-24px_rgba(15,23,42,0.25)] sm:h-[4.5rem] sm:w-[4.5rem] md:h-20 md:w-20">
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70 shadow-[0_14px_40px_-24px_rgba(15,23,42,0.25)] sm:h-14 sm:w-14 md:h-16 md:w-16 xl:h-[4.5rem] xl:w-[4.5rem]">
                 <Image
                   src={siteConfig.brandLogoSrc}
                   alt={`${siteConfig.shortName} logo`}
                   fill
-                  sizes="(max-width: 640px) 64px, (max-width: 768px) 72px, 80px"
+                  sizes="(max-width: 640px) 48px, (max-width: 768px) 56px, (max-width: 1280px) 64px, 72px"
                   className="object-contain p-0.5 sm:p-1"
                   priority
                 />
@@ -58,24 +83,32 @@ export function Navbar() {
                   <Sparkles className="h-3.5 w-3.5" />
                 </motion.span>
               </div>
-              <div className="leading-tight">
-                <div className="text-sm font-semibold tracking-tight text-slate-900 whitespace-nowrap sm:text-base">
+              <div className="min-w-0 leading-tight">
+                <div className="truncate text-sm font-semibold text-slate-900 sm:text-base">
                   {siteConfig.shortName}
-                  <span className="font-medium text-slate-600"> Animal Hospital</span>
                 </div>
+                <div className="truncate text-xs text-slate-600">Animal Hospital</div>
               </div>
             </Link>
 
-            <nav className="hidden items-center gap-1 md:flex">
+            <nav
+              className="hidden min-w-0 items-center gap-0.5 xl:flex xl:gap-1"
+              aria-label="Primary"
+            >
               {nav.map((item) => {
                 const active = pathname === "/" && item.id === "home";
                 return (
-                  <button
+                  <Link
                     key={item.id}
-                    type="button"
-                    onClick={() => scrollTo(item.id)}
+                    href={navHref(item.id)}
+                    onClick={(e) => {
+                      if (pathname === "/") {
+                        e.preventDefault();
+                        scrollTo(item.id);
+                      }
+                    }}
                     className={cn(
-                      "relative rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:text-slate-900",
+                      "relative rounded-full px-2.5 py-2 text-sm font-medium text-slate-700 transition hover:text-slate-900 xl:px-4",
                       active && "text-slate-900",
                     )}
                   >
@@ -87,25 +120,14 @@ export function Navbar() {
                       />
                     )}
                     {item.label}
-                  </button>
+                  </Link>
                 );
               })}
             </nav>
 
-            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              <Button
-                href={emergencyTel}
-                variant="secondary"
-                size="sm"
-                className="border border-rose-200/90 bg-gradient-to-r from-rose-50 to-orange-50/90 text-rose-950 shadow-[0_10px_28px_-16px_rgba(225,29,72,0.45)] ring-rose-200/80 hover:from-rose-100 hover:to-orange-50"
-                aria-label={`Emergency call ${siteConfig.phones.emergency}`}
-              >
-                <Phone className="h-4 w-4 text-rose-700" />
-                <span className="md:hidden">Emergency</span>
-                <span className="hidden md:inline">Emergency call</span>
-              </Button>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               <a
-                className="hidden items-center gap-2 rounded-full bg-white/60 px-3 py-2 text-xs font-medium text-slate-700 ring-1 ring-slate-200/70 transition hover:bg-white md:flex"
+                className="hidden items-center gap-2 rounded-full bg-white/60 px-3 py-2 text-xs font-medium text-slate-700 ring-1 ring-slate-200/70 transition hover:bg-white xl:flex"
                 href={siteConfig.address.googleMapsLink}
                 target="_blank"
                 rel="noreferrer"
@@ -116,7 +138,7 @@ export function Navbar() {
               <Button
                 href="/"
                 size="sm"
-                className="group"
+                className="group hidden xl:inline-flex"
                 onClick={(e) => {
                   e.preventDefault();
                   scrollTo("contact");
@@ -125,11 +147,110 @@ export function Navbar() {
                 <HeartPulse className="h-4 w-4 opacity-90 transition group-hover:scale-110" />
                 Book Visit
               </Button>
+
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/80 text-slate-800 ring-1 ring-slate-200/80 transition hover:bg-white hover:ring-slate-300/80 xl:hidden"
+                aria-expanded={menuOpen}
+                aria-controls="mobile-nav"
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                onClick={() => setMenuOpen((o) => !o)}
+              >
+                {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {menuOpen ? (
+          <>
+            <motion.button
+              key="nav-backdrop"
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-[2px] xl:hidden"
+              aria-label="Close menu"
+              onClick={() => setMenuOpen(false)}
+            />
+            <motion.div
+              key="nav-panel"
+              id="mobile-nav"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Site navigation"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 380, damping: 36 }}
+              className="fixed inset-y-0 right-0 z-[110] flex w-[min(100vw-2rem,20rem)] flex-col bg-white/95 shadow-2xl ring-1 ring-slate-200/80 backdrop-blur-xl xl:hidden"
+            >
+              <div className="flex items-center justify-between border-b border-slate-200/80 px-4 py-3">
+                <span className="text-sm font-semibold text-slate-900">Menu</span>
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                  aria-label="Close menu"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3" aria-label="Mobile">
+                {nav.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={navHref(item.id)}
+                    className="rounded-xl px-4 py-3 text-sm font-medium text-slate-800 transition hover:bg-violet-50 hover:text-violet-950"
+                    onClick={(e) => {
+                      if (pathname === "/") {
+                        e.preventDefault();
+                        scrollTo(item.id);
+                      }
+                      setMenuOpen(false);
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="border-t border-slate-200/80 p-3">
+                <a
+                  className="mb-2 flex items-center justify-center gap-2 rounded-xl bg-white/80 px-4 py-3 text-sm font-medium text-slate-800 ring-1 ring-slate-200/70 transition hover:bg-slate-50"
+                  href={siteConfig.address.googleMapsLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <MapPin className="h-4 w-4 text-indigo-700" />
+                  Directions
+                </a>
+                <Button
+                  href="/"
+                  size="lg"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMenuOpen(false);
+                    if (pathname === "/") {
+                      scrollTo("contact");
+                    } else {
+                      window.location.href = "/#contact";
+                    }
+                  }}
+                >
+                  <HeartPulse className="h-4 w-4" />
+                  Book Visit
+                </Button>
+              </div>
+            </motion.div>
+          </>
+        ) : null}
+      </AnimatePresence>
     </header>
   );
 }
-

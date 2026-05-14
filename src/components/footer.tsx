@@ -13,16 +13,16 @@ export function Footer() {
 
   return (
     <footer className="border-t border-slate-200/70 bg-white/40 backdrop-blur">
-      <div className="mx-auto max-w-7xl px-3 py-12 sm:px-4 2xl:max-w-[90rem]">
+      <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-10 md:grid-cols-3">
           <div>
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70 sm:h-[4.5rem] sm:w-[4.5rem]">
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70 sm:h-16 sm:w-16">
                 <Image
                   src={siteConfig.brandLogoSrc}
                   alt={`${siteConfig.shortName} logo`}
                   fill
-                  sizes="(max-width: 640px) 64px, 72px"
+                  sizes="(max-width: 640px) 56px, 64px"
                   className="object-contain p-0.5 sm:p-1"
                 />
               </div>

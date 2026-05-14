@@ -46,7 +46,7 @@ export default function RootLayout({
           <BackgroundGlow />
           <div className="relative">
             <Navbar />
-            <main className="mx-auto w-full max-w-7xl px-3 pb-20 pt-10 sm:px-4 2xl:max-w-[90rem]">
+            <main className="mx-auto w-full max-w-6xl px-4 pb-20 pt-10">
               {children}
             </main>
             <Footer />
