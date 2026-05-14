@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0b1220;
+  --muted: #475569;
+  --card: rgba(255, 255, 255, 0.72);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: rgba(168, 85, 247, 0.22);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.reviews-loop {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes reviews-loop-ltr {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.reviews-loop__track {
+  display: flex;
+  width: max-content;
+  animation: reviews-loop-ltr var(--reviews-loop-duration, 38s) linear infinite;
+  will-change: transform;
+}
+
+.reviews-loop:hover .reviews-loop__track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviews-loop__track {
+    animation: none;
+    transform: none;
+  }
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
