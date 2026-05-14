@@ -6,45 +6,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
 
-function closeIfBlankTab(w: Window | null) {
-  if (!w || w.closed) return;
-  try {
-    w.close();
-  } catch {
-    /* ignore */
-  }
-}
-
 /**
- * iOS Safari blocks `window.open(url)` after `await fetch` (lost user gesture).
- * Opening a placeholder tab synchronously on submit, then setting its location
- * after the API responds, keeps navigation tied to the tap and works on iPhone.
+ * Open WhatsApp in the current tab. Avoids `window.open` + `_blank`, which often
+ * leaves an extra "about:blank" tab (especially after `await fetch`) and confuses Back.
  */
-function goToWhatsApp(url: string, tabOpenedOnSubmit: Window | null) {
-  if (tabOpenedOnSubmit && !tabOpenedOnSubmit.closed) {
-    try {
-      tabOpenedOnSubmit.location.replace(url);
-      return;
-    } catch {
-      closeIfBlankTab(tabOpenedOnSubmit);
-    }
-  }
-
-  const coarsePointer =
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(pointer: coarse)").matches;
-  const likelyMobileUa =
-    typeof navigator !== "undefined" &&
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-  if (coarsePointer || likelyMobileUa) {
-    window.location.assign(url);
-    return;
-  }
-
-  const opened = window.open(url, "_blank", "noopener,noreferrer");
-  if (!opened) window.location.assign(url);
+function openWhatsAppUrl(url: string) {
+  window.location.assign(url);
 }
 
 function showAppointmentSentToDrToast() {
@@ -87,13 +54,6 @@ export function AppointmentForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    let whatsappTab: Window | null = null;
-    try {
-      whatsappTab = window.open("about:blank", "_blank", "noopener,noreferrer");
-    } catch {
-      whatsappTab = null;
-    }
-
     setStatus({ state: "submitting" });
     try {
       const res = await fetch("/api/appointment", {
@@ -112,21 +72,18 @@ export function AppointmentForm() {
         setPhone("");
         setMessage("");
         showAppointmentSentToDrToast();
-        goToWhatsApp(data.whatsappUrl, whatsappTab);
+        openWhatsAppUrl(data.whatsappUrl);
         setStatus({ state: "idle" });
         return;
       }
-
-      closeIfBlankTab(whatsappTab);
 
       setStatus({
         state: "error",
         error: data.error ?? "Something went wrong.",
         whatsappUrl: data.whatsappUrl,
       });
-      if (data.whatsappUrl) goToWhatsApp(data.whatsappUrl, null);
+      if (data.whatsappUrl) openWhatsAppUrl(data.whatsappUrl);
     } catch (err: unknown) {
-      closeIfBlankTab(whatsappTab);
       setStatus({
         state: "error",
         error: err instanceof Error ? err.message : "Failed to submit request.",
@@ -182,7 +139,7 @@ export function AppointmentForm() {
         <div className="text-sm text-rose-700">
           {status.error}{" "}
           {status.whatsappUrl ? (
-            <a className="underline" href={status.whatsappUrl} target="_blank" rel="noreferrer">
+            <a className="underline" href={status.whatsappUrl} rel="noreferrer">
               Open WhatsApp
             </a>
           ) : null}
